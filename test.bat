@@ -2,6 +2,6 @@
 set PATH=%~dp0..\..\scripts;%PATH%
 cd %~dp0
 
-call python main_dll.py
+call python test.py
 
 pause
