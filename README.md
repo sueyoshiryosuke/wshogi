@@ -10,7 +10,7 @@ Windowの将棋プログラム用dllライブラリ
 【連絡先】　　　　[末吉のTwitter](https://twitter.com/16shiki168)  
 【配布元ページ】　https://github.com/sueyoshiryosuke/wshogi  
 【動作確認環境】　Windows11  
-　　　　　　　　　gcc version 10.3.0 (tdm64-1)
+　　　　　　　　　gcc version 10.3.0 (tdm64-1)  
 　　　　　　　　　go version go1.20.4 windows/amd64
 　　　　　　　　　Python 3.10.4
 【使用ソフト】  
