@@ -16,7 +16,7 @@ Windowの将棋プログラム用dllライブラリ
 【使用ソフト】  
 　TDM-GCC　　　　 https://jmeubank.github.io/tdm-gcc/  
 　Go言語　　　　　https://go.dev/  
-　WinPython　　　https://winpython.github.io/  
+　WinPython　　　 https://winpython.github.io/  
 【参考ソフト】  
 　shogi686micro 　https://github.com/merom686/shogi686micro  
 　cshogi　　　　　https://github.com/TadaoYamaoka/cshogi  
