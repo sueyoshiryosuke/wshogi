@@ -1,0 +1,19 @@
+# wshogiでcppからdllを作成するときにコンパイルした時のコマンド
+g++ -O3 -mtune=generic -s -shared -o wshogi_cpp.dll wshogi_cpp.cpp
+
+もし実行時にエラーが出たら以下のコマンドでコンパイルすると動作するかも。
+g++ -O2 -mtune=generic -s -shared -o wshogi_cpp.dll wshogi_cpp.cpp
+または
+g++ -O -mtune=generic -s -shared -o wshogi_cpp.dll wshogi_cpp.cpp
+
+
+## 以下、おまけ
+オプションの参考とそのURL
+https://ac-as.net/gcc-optimization-option/
+https://wiki.gentoo.org/wiki/GCC_optimization/ja#.E6.9C.80.E9.81.A9.E5.8C.96.E3.81.AB.E3.81.A4.E3.81.84.E3.81.A6
+
+-mtune
+特定のCPUコードにチューニングし、-marchよりも一般的なコードを生成する。
+
+-s
+出力ファイルから全てのシンボル情報を除外するので、できあがるファイルサイズが小さくなる。

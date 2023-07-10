@@ -1,0 +1,52 @@
+# wshogi-dllで、wshogi_go.dllを生成したコマンド
+★Go言語とMinGW（cppコンパイラ）が利用可能な環境で実行した。
+go build -buildmode=c-shared -o wshogi_go.dll wshogi_go.go
+
+## wshogi-dll作成時の各バージョン
+go version go1.20.4 windows/amd64
+gcc version 10.3.0 (tdm64-1)
+Python 3.10.4
+
+
+## C言語の環境を整える。
+tdm-gcc
+https://jmeubank.github.io/tdm-gcc/
+tdm-gccを使って、MigGW（GCC：c++コンパイラ）をアーカイブ化する。
+↓
+---
+createで以下のチェックを外すと、ローカルのwin環境は変わらない。
+ Start Menu Items
+ Add to PATH
+
+## Pythonの環境を整える。
+Release WinPython 2022-04 of January 22nd 2023 (final) · winpython/winpython
+https://github.com/winpython/winpython/releases/tag/5.3.20221233
+
+以下のbatファイルを作り、
+作成したフォルダ内で起動するとgccが使える。
+
+golang、GCC、Pythonのフォルダにもパスを通したbat（start.bat）を用意する。
+
+--ここからstart.bat--
+@echo off
+
+set PATH=%~dp0bin;%~dp0TDM-GCC-64\bin;%~dp0WPy64-31110\scripts;%PATH%
+cmd start /k chcp 65001
+--ここまでstart.bat--
+
+## おまけ
+★注意点1
+Cのdllとしてコンパイルするとき、goのソースコードでは以下が必要。
+　import "C"
+関数定義の直前の行に、次のコメント行のままの文字列が必要。
+//export （関数名）
+//export abc
+
+★注意点2
+pythonのソースコードでのdllの指定は、同階層の場合「./」を付ける。
+OK:
+lib = cdll.LoadLibrary("./test.dll")
+
+付けないと、エラーが出る。
+NG:
+lib = cdll.LoadLibrary("test.dll")

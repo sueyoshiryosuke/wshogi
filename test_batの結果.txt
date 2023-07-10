@@ -1,0 +1,26 @@
+len(result): 146
+result: ['9a9b', '8a8b', '8a8c', '8a8d', '8a8e', '8a8f', '8a7a', '8a6a', '8a5a', '8a4a', '8a3a', '8a2a', '1a1b', '1a1c', '6b6c', '6b7c', '6b7b', '6b5a', '6b6a', '6b7a', '9c9d', '5c5d', '7d7e', '4d4e', '1d1e', '6e7g+', '6e7g', '6e5g+', '6e5g', '4g3h', '4g4h', '4g5h', '4g3g', '4g5g', '4g4f', '6h5i', '6h7i', '6h5h', '6h7h', '6h6g', '6i5i', '6i7i', 'B*7a', 'B*6a', 'B*5a', 'B*4a', 'B*3a', 'B*9b', 'B*8b', 'B*7b', 'B*4b', 'B*3b', 'B*1b', 'B*8c', 'B*7c', 'B*6c', 'B*4c', 'B*3c', 'B*1c', 'B*9d', 'B*8d', 'B*5d', 'B*3d', 'B*2d', 'B*9e', 'B*8e', 'B*7e', 'B*5e', 'B*4e', 'B*2e', 'B*1e', 'B*9f', 'B*6f', 'B*5f', 'B*4f', 'B*3f', 'B*2f', 'B*1f', 'B*6g', 'B*5g', 'B*3g', 'B*2g', 'B*9h', 'B*7h', 'B*5h', 'B*4h', 'B*3h', 'B*2h', 'B*1h', 'B*7i', 'B*5i', 'B*4i', 'B*3i', 'B*2i', 'G*7a', 'G*6a', 'G*5a', 'G*4a', 'G*3a', 'G*9b', 'G*8b', 'G*7b', 'G*4b', 'G*3b', 'G*1b', 'G*8c', 'G*7c', 'G*6c', 'G*4c', 'G*3c', 'G*1c', 'G*9d', 'G*8d', 'G*5d', 'G*3d', 'G*2d', 'G*9e', 'G*8e', 'G*7e', 'G*5e', 'G*4e', 'G*2e', 'G*1e', 'G*9f', 'G*6f', 'G*5f', 'G*4f', 'G*3f', 'G*2f', 'G*1f', 'G*6g', 'G*5g', 'G*3g', 'G*2g', 'G*9h', 'G*7h', 'G*5h', 'G*4h', 'G*3h', 'G*2h', 'G*1h', 'G*7i', 'G*5i', 'G*4i', 'G*3i', 'G*2i']
+
+result1:
+position sfen lr5+Sl/3kg2+R1/p1nsp4/2pp1p2p/6P2/1PP6/PGS+s1+p2P/1K1B5/LN1+n4L b BGN6Pg 1 moves G*4c 6g6h 4c5b 6c5b P*2d 7c6e 2d2c+
+P1-KY-HI *  *  *  *  * +NG-KY
+P2 *  *  * -OU-GI *  * +RY *
+P3-FU *  *  * -FU *  * +TO *
+P4 *  * -FU-FU * -FU *  * -FU
+P5 *  *  * -KE *  * +FU *  *
+P6 * +FU+FU *  *  *  *  *  *
+P7+FU+KI+GI *  * -TO *  * +FU
+P8 * +OU * -NG *  *  *  *  *
+P9+KY+KE * -NK *  *  *  * +KY
+P+00FU00FU00FU00FU00FU00KE00KI00KA
+P-00KI00KI00KA
+
+result2: position startpos moves 2g2f 3c3d 7g7f 4a3b 2f2e 8c8d 6i7h 8d8e 2e2d 2c2d 2h2d 8e8f 8g8f 8b8f 2d3d 2b3c 5i5h 8f8b 3g3f 3c8h+ 7i8h 3b3c P*8c 8b2b P*2c 2b2c P*2d 2c2b 3d8d B*2g 2i3g 2g3f+ B*4e 3f3g 8c8b+ 7a8b 2d2c+ 3c2c 4e2c+ 2b2c 8d8b+ 2c2b 8b9a 6a7a L*3h 3g4g 5h4g B*6i 4g4h 6i7h+ 3h3a+ 2b2g+ B*9e 5a4b G*3b 4b5b S*4a 5b6b 3b4b P*8b 9a9b G*6a 3a2a 6c6d N*5e N*5a S*5b 5c5d 5e6c+ 5a6c 4b4c P*4g 4h5i 6c7e 7f7e 4g4h+ 3i4h 7h6h 5i6h 2g5g 4h5g N*5f 6h7g 6a5b 4a5b+ 6b7b B*8c 7b6c 4c5c 1a1b
+
+result3: position startpos moves 2g2f 3c3d 7g7f 4a3b 2f2e 8c8d 6i7h 8d8e 2e2d 2c2d 2h2d 8e8f 8g8f 8b8f 2d3d 2b3c 5i5h 8f8b 3g3f 3c8h+ 7i8h 3b3c P*8c 8b2b P*2c 2b2c P*2d 2c2b 3d8d B*2g 2i3g 2g3f+ B*4e 3f3g 8c8b+ 7a8b 2d2c+ 3c2c 4e2c+ 2b2c 8d8b+ 2c2b 8b9a 6a7a L*3h 3g4g 5h4g B*6i 4g4h 6i7h+ 3h3a+ 2b2g+ B*9e 5a4b G*3b 4b5b S*4a 5b6b 3b4b P*8b 9a9b G*6a 3a2a 6c6d N*5e N*5a S*5b 5c5d 5e6c+ 5a6c 4b4c P*4g 4h5i 6c7e 7f7e 4g4h+ 3i4h 7h6h 5i6h 2g5g 4h5g N*5f 6h7g 6a5b 4a5b+ 6b7b B*8c 7b6c
+
+result4:
+position sfen lr5+Sl/3kg2+R1/p1nsp4/2pp1p2p/6P2/1PP6/PGS+s1+p2P/1K1B5/LN1+n4L b BGN6Pg 1 moves G*4c 6g6h 4c5b 6c5b P*2d 7c6e 2d2c+
+WHITE
+
+続行するには何かキーを押してください . . .
