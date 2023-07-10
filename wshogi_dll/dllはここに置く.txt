@@ -1,0 +1,1 @@
+wshogi_cpp.dllとwshogi_go.dllは、このフォルダに置く。
