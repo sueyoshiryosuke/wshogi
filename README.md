@@ -72,7 +72,9 @@ Windowの将棋プログラム用dllライブラリ
 　バイナリも含めた一式をダウンロードできます。  
   
 ## 使用方法  
-　test.pyを参考に、お察しください。  
+test.pyを参考に、お察しください。  
+と思いましたが、以下がオンラインマニュアルです。  
+https://github.com/sueyoshiryosuke/wshogi/wiki  
   
 ## 使用例  
 ```python
