@@ -1,24 +1,25 @@
 /**
  * @file wshogi_cpp.cpp
- * @brief ‡–@è‚Ì¶¬•”•ª‚¾‚¯dll‰»‚µ‚½‚à‚Ì
+ * @brief åˆæ³•æ‰‹ã®ç”Ÿæˆéƒ¨åˆ†ã ã‘dllåŒ–ã—ãŸã‚‚ã®
  * @author SUEYOSHI Ryosuke
  * @date 2023-07-10
  * 
- * «ŠûƒGƒ“ƒWƒ“ushogi686microv‚Ìƒ\[ƒXƒR[ƒh‚ğŒ³‚É
- * ‡–@è‚Ì¶¬•”•ª‚¾‚¯”²ˆ‚µ‚Ädll‰»‚µ‚½‚à‚ÌB
+ * å°†æ£‹ã‚¨ãƒ³ã‚¸ãƒ³ã€Œshogi686microã€ã®ã‚½ãƒ¼ã‚¹ã‚³ãƒ¼ãƒ‰ã‚’å…ƒã«
+ * åˆæ³•æ‰‹ã®ç”Ÿæˆéƒ¨åˆ†ã ã‘æŠœç²‹ã—ã¦dllåŒ–ã—ãŸã‚‚ã®ã€‚
  * 
- * merom686/shogi686micro: ƒ\[ƒXƒtƒ@ƒCƒ‹1ŒÂ‚Å«Šû‚ÌvlƒGƒ“ƒWƒ“
+ * merom686/shogi686micro: ã‚½ãƒ¼ã‚¹ãƒ•ã‚¡ã‚¤ãƒ«1å€‹ã§å°†æ£‹ã®æ€è€ƒã‚¨ãƒ³ã‚¸ãƒ³
  * https://github.com/merom686/shogi686micro
  * 
- * dll¶¬‚ÌƒRƒ“ƒpƒCƒ‹ƒRƒ}ƒ“ƒh‚ÍˆÈ‰ºB
+ * dllç”Ÿæˆã®ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã‚³ãƒãƒ³ãƒ‰ã¯ä»¥ä¸‹ã€‚
  * --
- * g++ -O2 -mtune=generic -s -shared -o shogimicro_cpp.dll shogimicro_cpp.cpp
+ * g++ -O2 -mtune=generic -s -shared -o wshogi_cpp.dll wshogi_cpp.cpp
  * --
  */
 
 #include <iostream>
 #include <regex>
 #include <chrono>
+#include <cstring>
 
 //#define _assert(x) ((void)0)
 #define _assert(x) \
@@ -45,7 +46,7 @@ uint64_t nodes;
 
 struct Stack;
 
-//w‚µè
+//æŒ‡ã—æ‰‹
 class Move
 {
 	int value;
@@ -68,16 +69,16 @@ public:
 	int cap() const {
 		return value >> 21 & 0xf;
 	}
-	//ˆÚ“®Œã‚Ì‹î
+	//ç§»å‹•å¾Œã®é§’
 	int pieceTo() const {
 		return piece() | promote() << 3;
 	}
 	bool isNone() const {
 		return (value == MoveNone);
 	}
-	//USIŒ`®‚É•ÏŠ·
+	//USIå½¢å¼ã«å¤‰æ›
 	std::string toUSI() const;
-	//ˆÚ“®Œ³(‹î‘ä‚Ì‚Æ‚«‚Í0)8bit, ˆÚ“®æ8bit, ˆÚ“®u‘Ov‚Ì‹î4bit, ¬‚Á‚½‚©1bit, æ‚Á‚½‹î4bit
+	//ç§»å‹•å…ƒ(é§’å°ã®ã¨ãã¯0)8bit, ç§»å‹•å…ˆ8bit, ç§»å‹•ã€Œå‰ã€ã®é§’4bit, æˆã£ãŸã‹1bit, å–ã£ãŸé§’4bit
 	Move(int from, int to, int piece, int promote, int cap){
 		value = from | to << 8 | piece << 16 | promote << 20 | cap << 21;
 	}
@@ -85,30 +86,30 @@ public:
 	Move(){}
 };
 
-//‹Ç–Ê
+//å±€é¢
 struct Position
 {
 	static const int FileNum = 9, RankNum = 9, PromotionRank = 3;
 	static const int Stride = FileNum + 1, Origin = Stride * 3, SquareNum = Origin + Stride * (RankNum + 2);
 
-	//piece_turn: ‹î‚Ìí—Ş3bit, ¬1bit, æè‚Ì‹î1bit, Œãè‚Ì‹î1bit ˆÈã6bit;•Ç‚Í‘S8bit‚ª—§‚Á‚Ä‚¢‚é
+	//piece_turn: é§’ã®ç¨®é¡3bit, æˆ1bit, å…ˆæ‰‹ã®é§’1bit, å¾Œæ‰‹ã®é§’1bit ä»¥ä¸Š6bit;å£ã¯å…¨8bitãŒç«‹ã£ã¦ã„ã‚‹
 	uint8_t piece_turn[SquareNum], hand[ColorNum][HandTypeNum], turn;
-	uint8_t king[ColorNum];//‹Ê‚ÌˆÊ’u
-	uint8_t continuousCheck[ColorNum];//Œ»İ‚Ì˜A‘±‰¤è‰ñ”
+	uint8_t king[ColorNum];//ç‰ã®ä½ç½®
+	uint8_t continuousCheck[ColorNum];//ç¾åœ¨ã®é€£ç¶šç‹æ‰‹å›æ•°
 
-	//’Tõ‚ğn‚ß‚½‚ÆI—¹‚·‚é
+	//æ¢ç´¢ã‚’å§‹ã‚ãŸæ™‚åˆ»ã¨çµ‚äº†ã™ã‚‹æ™‚åˆ»
 	std::chrono::system_clock::time_point timeStart, timeEnd;
-	int ply, gamePly;//Root‚©‚ç‚Ìè”AŠJn‹Ç–Ê‚©‚ç‚Ìè”
-	Stack *ss;//Root‚ÌStackˆÊ’u
+	int ply, gamePly;//Rootã‹ã‚‰ã®æ‰‹æ•°ã€é–‹å§‹å±€é¢ã‹ã‚‰ã®æ‰‹æ•°
+	Stack *ss;//Rootã®Stackä½ç½®
 
-	//‹Ç–Ê‚ğ”äŠr‚·‚é “¯ˆê‚È‚ç0‚ğ•Ô‚·
+	//å±€é¢ã‚’æ¯”è¼ƒã™ã‚‹ åŒä¸€ãªã‚‰0ã‚’è¿”ã™
 	static int compare(const Position &p1, const Position &p2){
 		bool bp = std::equal(p1.piece_turn + Origin, p1.piece_turn + Origin + Stride * RankNum, p2.piece_turn + Origin);
-		bool bh = std::equal(p1.hand[Black], p1.hand[White], p2.hand[Black]);//æè‚Ì‚¿‹î‚¾‚¯”äŠr‚·‚ê‚Î‚æ‚¢
+		bool bh = std::equal(p1.hand[Black], p1.hand[White], p2.hand[Black]);//å…ˆæ‰‹ã®æŒã¡é§’ã ã‘æ¯”è¼ƒã™ã‚Œã°ã‚ˆã„
 		bool bt = (p1.turn == p2.turn);
 		return (bp && bh && bt) ? 0 : 1;
 	}
-	//square(0, 0)‚Í”Õ‚Ì¶ã‹÷‚ğ•\‚·(‰Eã‹÷‚Å‚Í‚È‚¢)
+	//square(0, 0)ã¯ç›¤ã®å·¦ä¸Šéš…ã‚’è¡¨ã™(å³ä¸Šéš…ã§ã¯ãªã„)
 	static int square(int x, int y){
 		return Origin + Stride * y + x;
 	}
@@ -119,7 +120,7 @@ struct Position
 	int turnMask() const {
 		return turnMask(turn);
 	}
-	//¡‚ªè”Ô‚É‚Æ‚Á‚Ä“Gwrank’i–Ú‚Ü‚Å‚É‚ ‚é‚©
+	//å‡ãŒæ‰‹ç•ªã«ã¨ã£ã¦æ•µé™£rankæ®µç›®ã¾ã§ã«ã‚ã‚‹ã‹
 	template <int rank = PromotionRank>
 	bool promotionZone(int sq) const {
 		if (turn == Black){
@@ -128,45 +129,45 @@ struct Position
 			return sq >= square(0, RankNum - rank);
 		}
 	}
-	//turn‚Ì‹Ê‚É‰¤è‚ª‚©‚©‚Á‚Ä‚¢‚é‚©
+	//turnã®ç‰ã«ç‹æ‰‹ãŒã‹ã‹ã£ã¦ã„ã‚‹ã‹
 	bool inCheck(const int turn) const;
-	//è‚ği‚ß‚é
+	//æ‰‹ã‚’é€²ã‚ã‚‹
 	void doMove(Stack *const ss, const Move move);
-	//‰¤è•ú’u(©Eè)‚Å‚È‚¢‚©Šm‚©‚ß‚é
+	//ç‹æ‰‹æ”¾ç½®(è‡ªæ®ºæ‰‹)ã§ãªã„ã‹ç¢ºã‹ã‚ã‚‹
 	bool isLegal(Stack *const ss, const Move pseudoLegalMove);
 	void clear(){
 		std::memset(this, 0, sizeof *this);
-		std::fill_n(piece_turn, SquareNum, 0xff);//•Ç‚Å–„‚ß‚é
+		std::fill_n(piece_turn, SquareNum, 0xff);//å£ã§åŸ‹ã‚ã‚‹
 		for (int y = 0; y < RankNum; y++){
-			std::fill_n(&piece_turn[square(0, y)], FileNum, 0);//y’i–Ú‚ğ‘S•”‹ó‚«¡‚É
+			std::fill_n(&piece_turn[square(0, y)], FileNum, 0);//yæ®µç›®ã‚’å…¨éƒ¨ç©ºãå‡ã«
 		}
 	}
 };
 
 struct Stack
 {
-	Move pv[MaxPly];//“Ç‚İ‹Ø‚ğ‹L˜^‚·‚é
-	Move currentMove;//‚¢‚Ü“Ç‚ñ‚Å‚¢‚éè
-	bool checked;//è”Ô‚Ì‹Ê‚É‰¤è‚ª‚©‚©‚Á‚Ä‚¢‚é‚©
-	Position pos;//‹Ç–Ê‚ğ•Û‘¶‚µ‚ÄAç“úèŒŸo‚âè‚ğ–ß‚·‚Ì‚Ég‚¤
+	Move pv[MaxPly];//èª­ã¿ç­‹ã‚’è¨˜éŒ²ã™ã‚‹
+	Move currentMove;//ã„ã¾èª­ã‚“ã§ã„ã‚‹æ‰‹
+	bool checked;//æ‰‹ç•ªã®ç‰ã«ç‹æ‰‹ãŒã‹ã‹ã£ã¦ã„ã‚‹ã‹
+	Position pos;//å±€é¢ã‚’ä¿å­˜ã—ã¦ã€åƒæ—¥æ‰‹æ¤œå‡ºã‚„æ‰‹ã‚’æˆ»ã™ã®ã«ä½¿ã†
 };
 
-//w’è‚³‚ê‚½‹î‚Ì—˜‚«‚ª‚ ‚é‘S‚Ä‚Ì¡‚É‘Î‚µ‚ÄAtrue‚ğ•Ô‚·‚Ü‚Åf‚ğÀs‚·‚é
+//æŒ‡å®šã•ã‚ŒãŸé§’ã®åˆ©ããŒã‚ã‚‹å…¨ã¦ã®å‡ã«å¯¾ã—ã¦ã€trueã‚’è¿”ã™ã¾ã§fã‚’å®Ÿè¡Œã™ã‚‹
 template <class F>
 inline bool forAttack(const uint8_t *pt, const int sq, const int p, const int turn, F f)
 {
 	static const int8_t n = Position::Stride;
 	static const int8_t att[PieceTypeNum][10] = {
-		{ -n - 1, -n, -n + 1, -1, 1, n - 1, n, n + 1, 0, 0 },//‹Ê
+		{ -n - 1, -n, -n + 1, -1, 1, n - 1, n, n + 1, 0, 0 },//ç‰
 		{ 0, -n, -1, 1, n, 0, 0, 0, 0, 0 },
 		{ 0, -n - 1, -n + 1, n - 1, n + 1, 0, 0, 0, 0, 0 },
 		{ -n - 1, -n, -n + 1, -1, 1, n, 0, 0, 0, 0 },
 		{ -n - 1, -n, -n + 1, n - 1, n + 1, 0, 0, 0, 0, 0 },
 		{ -n * 2 + 1, -n * 2 - 1, 0, 0, 0, 0, 0, 0, 0, 0 },
 		{ 0, -n, 0, 0, 0, 0, 0, 0, 0, 0 },
-		{ -n, 0, 0, 0, 0, 0, 0, 0, 0, 0 },//•à
+		{ -n, 0, 0, 0, 0, 0, 0, 0, 0, 0 },//æ­©
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-		{ -n - 1, -n + 1, n - 1, n + 1, 0, -n, -1, 1, n, 0 },//—³
+		{ -n - 1, -n + 1, n - 1, n + 1, 0, -n, -1, 1, n, 0 },//ç«œ
 		{ -n, -1, 1, n, 0, -n - 1, -n + 1, n - 1, n + 1, 0 },
 		{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 		{ -n - 1, -n, -n + 1, -1, 1, n, 0, 0, 0, 0 },
@@ -226,13 +227,13 @@ inline bool Position::inCheck(const int turn) const
 inline void Position::doMove(Stack *const ss, const Move move)
 {
 	if (move.from() == 0){
-		//‘Å‚Â
+		//æ‰“ã¤
 		hand[turn][move.piece()]--;
 		piece_turn[move.to()] = move.piece() | turnMask();
 	} else {
-		//ˆÚ“®
+		//ç§»å‹•
 		if (move.cap()){
-			//æ‚é
+			//å–ã‚‹
 			hand[turn][move.cap() % HandTypeNum]++;
 		}
 		piece_turn[move.from()] = 0;
@@ -243,11 +244,11 @@ inline void Position::doMove(Stack *const ss, const Move move)
 	ply++;
 	gamePly++;
 
-	//‚¢‚Üw‚µ‚½è
+	//ã„ã¾æŒ‡ã—ãŸæ‰‹
 	ss->currentMove = move;
-	//‚¢‚Üw‚µ‚½è‚ª‰¤è‚¾‚Á‚½‚©
+	//ã„ã¾æŒ‡ã—ãŸæ‰‹ãŒç‹æ‰‹ã ã£ãŸã‹
 	(ss + 1)->checked = inCheck(turn);
-	//˜A‘±‰¤è‚Ì‰ñ”‚ğXV
+	//é€£ç¶šç‹æ‰‹ã®å›æ•°ã‚’æ›´æ–°
 	if ((ss + 1)->checked){
 		continuousCheck[ss->pos.turn]++;
 	} else {
@@ -259,17 +260,17 @@ inline bool Position::isLegal(Stack *const ss, const Move pseudoLegalMove)
 {
 	doMove(ss, pseudoLegalMove);
 	bool illegal = inCheck(turn ^ 1);
-	*this = ss->pos;//è‚ğ–ß‚·
+	*this = ss->pos;//æ‰‹ã‚’æˆ»ã™
 	return !illegal;
 }
 
-//‘S‚Ä‚Ì‡–@è(‰¤è•ú’u‚ğŠÜ‚Ş)‚ğ¶¬‚µA¶¬‚µ‚½w‚µè‚ÌŒÂ”‚ğ•Ô‚·
+//å…¨ã¦ã®åˆæ³•æ‰‹(ç‹æ‰‹æ”¾ç½®ã‚’å«ã‚€)ã‚’ç”Ÿæˆã—ã€ç”Ÿæˆã—ãŸæŒ‡ã—æ‰‹ã®å€‹æ•°ã‚’è¿”ã™
 int generateMoves(Move *const moves, const Position &pos)
 {
 	Move *m = moves;
-	int pawn = 0;//“ñ•àŒŸo—p‚Ìƒrƒbƒgƒ}ƒbƒv
+	int pawn = 0;//äºŒæ­©æ¤œå‡ºç”¨ã®ãƒ“ãƒƒãƒˆãƒãƒƒãƒ—
 	const int t = pos.turnMask();
-	//ˆÚ“®
+	//ç§»å‹•
 	for (int y = 0; y < Position::RankNum; y++){
 		for (int x = 0; x < Position::FileNum; x++){
 			int from = Position::square(x, y);
@@ -279,7 +280,7 @@ int generateMoves(Move *const moves, const Position &pos)
 				if (p == Pawn) pawn |= 1 << x;
 				forAttack(pos.piece_turn, from, p, pos.turn, [&](int to){
 					int cap = pos.piece_turn[to];
-					if (!(cap & t)){//©•ª‚Ì‹î‚Æ•ÇˆÈŠO(‹ó¡‚Æ‘Šè‚Ì‹î)‚Ö‚È‚çˆÚ“®‚Å‚«‚é
+					if (!(cap & t)){//è‡ªåˆ†ã®é§’ã¨å£ä»¥å¤–(ç©ºå‡ã¨ç›¸æ‰‹ã®é§’)ã¸ãªã‚‰ç§»å‹•ã§ãã‚‹
 						if (p < HandTypeNum && p != King && p != Gold
 							&& (pos.promotionZone(from) || pos.promotionZone(to))){
 							*m++ = Move{ from, to, p, 1, cap % PieceTypeNum };
@@ -294,7 +295,7 @@ int generateMoves(Move *const moves, const Position &pos)
 			}
 		}
 	}
-	//‘Å‚Â
+	//æ‰“ã¤
 	for (int p = Rook; p < HandTypeNum; p++){
 		if (!pos.hand[pos.turn][p]) continue;
 		for (int y = 0; y < Position::RankNum; y++){
@@ -314,11 +315,11 @@ int generateMoves(Move *const moves, const Position &pos)
 }
 
 
-//SFEN‚Ì‹Ç–Ê‚ğpos‚Æss‚ÉƒZƒbƒg‚·‚é
+//SFENã®å±€é¢ã‚’posã¨ssã«ã‚»ãƒƒãƒˆã™ã‚‹
 void setPosition(Position &pos, Stack *ss, std::istringstream &iss)
 {
-	//startpos‚Ìˆ—‚ß‚ñ‚Ç‚¢
-	//•ÏX‚µ‚½B
+	//startposã®å‡¦ç†ã‚ã‚“ã©ã„
+	//å¤‰æ›´ã—ãŸã€‚
 	std::string input = iss.str().substr((size_t)iss.tellg() + 1);
 	if (input.find("startpos") == 0) {
 		input.replace(0, 8, "sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1");
@@ -327,10 +328,10 @@ void setPosition(Position &pos, Stack *ss, std::istringstream &iss)
 
 	std::string sfenPos, sfenTurn, sfenHand, sfenCount, sfenMove;
 
-	//‹Ç–Ê‰Šú‰»
+	//å±€é¢åˆæœŸåŒ–
 	pos.clear();
 
-	//”Õ–Ê
+	//ç›¤é¢
 	iss >> sfenPos;//"sfen"
 	iss >> sfenPos;
 	int x = 0, y = 0, pro = 0;
@@ -351,15 +352,15 @@ void setPosition(Position &pos, Stack *ss, std::istringstream &iss)
 			pos.piece_turn[sq] = p | Position::turnMask(turn);
 			pro = 0;
 			x++;
-			if (p == King) pos.king[turn] = sq;//‹Ê‚ÌˆÊ’u‚Í‚±‚±‚ÅƒZƒbƒg‚·‚é
+			if (p == King) pos.king[turn] = sq;//ç‰ã®ä½ç½®ã¯ã“ã“ã§ã‚»ãƒƒãƒˆã™ã‚‹
 		}
 	}
 
-	//è”Ô
+	//æ‰‹ç•ª
 	iss >> sfenTurn;
 	pos.turn = (sfenTurn == "b") ? Black : White;
 
-	//‚¿‹î
+	//æŒã¡é§’
 	iss >> sfenHand;
 	int n = 0;
 	for (auto c : sfenHand){
@@ -375,20 +376,20 @@ void setPosition(Position &pos, Stack *ss, std::istringstream &iss)
 		}
 	}
 
-	//è”(g‚í‚È‚¢)
+	//æ‰‹æ•°(ä½¿ã‚ãªã„)
 	iss >> sfenCount;
 
-	//Stack‚Í‚±‚±‚Å
+	//Stackã¯ã“ã“ã§
 	ss->checked = pos.inCheck(pos.turn);
 	ss->pos = pos;
 	pos.ss = ss;
 
-	//w‚µè
+	//æŒ‡ã—æ‰‹
 	iss >> sfenMove;
 	if (sfenMove != "moves") return;
 
 	while (iss >> sfenMove){
-		//‘S‚Ä‚Ì‡–@è‚ğ¶¬‚µ‚Äˆê’v‚·‚é‚à‚Ì‚ğ’T‚·
+		//å…¨ã¦ã®åˆæ³•æ‰‹ã‚’ç”Ÿæˆã—ã¦ä¸€è‡´ã™ã‚‹ã‚‚ã®ã‚’æ¢ã™
 		Move moves[MaxMove];
 		int n = generateMoves(moves, pos);
 
@@ -404,14 +405,14 @@ void setPosition(Position &pos, Stack *ss, std::istringstream &iss)
 
 /**
  * @fn int legalMoves2(const std::string)
- * «Šû‚ÌsfenŒ`®‚Ì•¶š—ñ‚ğ“Ç‚İ‚Ş‚ÆA‡–@è‚Ì”‚ğ•Ô‚·B
- * ‰¤è•ú’u‚ÍŠÜ‚Ü‚¸A‘Å‚¿•à‹l‚ß‚Ìè‚ğŠÜ‚ŞB
- * @param cmd sfenŒ`®‚Ì•¶š—ñBƒfƒtƒHƒ‹ƒg‚Í•½è‹Ç–ÊB
- * @return int ‡–@è‚Ì”B
+ * å°†æ£‹ã®sfenå½¢å¼ã®æ–‡å­—åˆ—ã‚’èª­ã¿è¾¼ã‚€ã¨ã€åˆæ³•æ‰‹ã®æ•°ã‚’è¿”ã™ã€‚
+ * ç‹æ‰‹æ”¾ç½®ã¯å«ã¾ãšã€æ‰“ã¡æ­©è©°ã‚ã®æ‰‹ã‚’å«ã‚€ã€‚
+ * @param cmd sfenå½¢å¼ã®æ–‡å­—åˆ—ã€‚ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¯å¹³æ‰‹å±€é¢ã€‚
+ * @return int åˆæ³•æ‰‹ã®æ•°ã€‚
  * @detail
- * ˆø”‚Ì—áF
+ * å¼•æ•°ã®ä¾‹ï¼š
  *   "position startpos moves 7g7f"
- * –ß‚è’l‚Ì—áF
+ * æˆ»ã‚Šå€¤ã®ä¾‹ï¼š
  *   30
  */
 int legalMoves2(const std::string cmd = std::string("position startpos")) {
@@ -427,16 +428,16 @@ int legalMoves2(const std::string cmd = std::string("position startpos")) {
 	std::memset(ss, 0, vss.size() * sizeof *ss);
 	setPosition(pos, ss + 1, iss);
 
-	Move moves[MaxMove];  // ‡–@è‚ğŠi”[‚·‚é‚½‚ß‚Ì”z—ñ
-	int n = generateMoves(moves, pos);  //‚·‚×‚Ä‚Ì‡–@è(‰¤è•ú’u‚ğŠÜ‚Ş)‚ÌŒÂ”
-	ss->pos = pos;  //Œ»İ‚Ì‹Ç–Ê‚Ì•Û‘¶B
+	Move moves[MaxMove];  // åˆæ³•æ‰‹ã‚’æ ¼ç´ã™ã‚‹ãŸã‚ã®é…åˆ—
+	int n = generateMoves(moves, pos);  //ã™ã¹ã¦ã®åˆæ³•æ‰‹(ç‹æ‰‹æ”¾ç½®ã‚’å«ã‚€)ã®å€‹æ•°
+	ss->pos = pos;  //ç¾åœ¨ã®å±€é¢ã®ä¿å­˜ã€‚
 
-	int trn_num = 0;  // –ß‚è’l‚Æ‚È‚é‡–@è‚Ì”
+	int trn_num = 0;  // æˆ»ã‚Šå€¤ã¨ãªã‚‹åˆæ³•æ‰‹ã®æ•°
 	for (int i = 0; i < n; i++){
 		Move move = moves[i];
-		if (!pos.isLegal(ss, move)) continue;  //‰¤è•ú’u‚ğœ‚­
+		if (!pos.isLegal(ss, move)) continue;  //ç‹æ‰‹æ”¾ç½®ã‚’é™¤ã
 		
-		// ‡–@è‚Ì”‚ğƒJƒEƒ“ƒg‚·‚éB
+		// åˆæ³•æ‰‹ã®æ•°ã‚’ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹ã€‚
 		trn_num++;
 	}
 	
@@ -446,15 +447,15 @@ int legalMoves2(const std::string cmd = std::string("position startpos")) {
 
 /**
  * @fn char* legal_moves(const char*)
- * «Šû‚ÌsfenŒ`®‚Ì•¶š—ñ‚ğ“Ç‚İ‚Ş‚ÆA‡–@è‚ğUSIŒ`®‚Å•Ô‚·B
- * ‰¤è•ú’u‚àA‘Å‚¿•à‹l‚ß‚Ìè‚àŠÜ‚Ü‚È‚¢B
- * @param cmd sfenŒ`®‚Ì•¶š—ñBƒfƒtƒHƒ‹ƒg‚Í•½è‹Ç–ÊB
- * @return char* ˆø”‚Ì‹Ç–Ê‚Ì‡–@è‚ğUSIŒ`®‚Å—ñ‹“‚·‚éB
- * @detail –ß‚è’l‚ÍŒ©‚Â‚©‚ç‚È‚¯‚ê‚Îu""v‚ğ•Ô‚·B
- * ˆø”‚Ì—áF
+ * å°†æ£‹ã®sfenå½¢å¼ã®æ–‡å­—åˆ—ã‚’èª­ã¿è¾¼ã‚€ã¨ã€åˆæ³•æ‰‹ã‚’USIå½¢å¼ã§è¿”ã™ã€‚
+ * ç‹æ‰‹æ”¾ç½®ã‚‚ã€æ‰“ã¡æ­©è©°ã‚ã®æ‰‹ã‚‚å«ã¾ãªã„ã€‚
+ * @param cmd sfenå½¢å¼ã®æ–‡å­—åˆ—ã€‚ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¯å¹³æ‰‹å±€é¢ã€‚
+ * @return char* å¼•æ•°ã®å±€é¢ã®åˆæ³•æ‰‹ã‚’USIå½¢å¼ã§åˆ—æŒ™ã™ã‚‹ã€‚
+ * @detail æˆ»ã‚Šå€¤ã¯è¦‹ã¤ã‹ã‚‰ãªã‘ã‚Œã°ã€Œ""ã€ã‚’è¿”ã™ã€‚
+ * å¼•æ•°ã®ä¾‹ï¼š
  *   "position startpos moves 7g7f"
- * –ß‚è’l‚Ì—áF
- *   "9a9b 7a6b 7a7biˆÈ‰º—ªj"
+ * æˆ»ã‚Šå€¤ã®ä¾‹ï¼š
+ *   "9a9b 7a6b 7a7bï¼ˆä»¥ä¸‹ç•¥ï¼‰"
  */
 extern "C" char* legal_moves(const char* cmd = "position startpos") {
     const std::string cmd_str(cmd);
@@ -463,8 +464,8 @@ extern "C" char* legal_moves(const char* cmd = "position startpos") {
     Stack *const ss = &vss[0];
 
     std::string token, rtn_str;
-	rtn_str.reserve(MaxMove * 6);  // ‡–@è1‚Â‚Í5•¶š+ƒXƒy[ƒX1•¶šB
-	std::string checkSfen;  //‘Å‚¿•à‹l‚ß‚Ìƒ`ƒFƒbƒN—p‚Ìsfen•¶š—ñB
+	rtn_str.reserve(MaxMove * 6);  // åˆæ³•æ‰‹1ã¤ã¯5æ–‡å­—+ã‚¹ãƒšãƒ¼ã‚¹1æ–‡å­—ã€‚
+	std::string checkSfen;  //æ‰“ã¡æ­©è©°ã‚ã®ãƒã‚§ãƒƒã‚¯ç”¨ã®sfenæ–‡å­—åˆ—ã€‚
 
     std::istringstream iss(cmd_str);
     iss >> token;
@@ -472,34 +473,34 @@ extern "C" char* legal_moves(const char* cmd = "position startpos") {
 	std::memset(ss, 0, vss.size() * sizeof *ss);
 	setPosition(pos, ss + 1, iss);
 
-	Move moves[MaxMove];  // ‡–@è‚ğŠi”[‚·‚é‚½‚ß‚Ì”z—ñ
-	int n = generateMoves(moves, pos);  //‚·‚×‚Ä‚Ì‡–@è(‰¤è•ú’u‚ğŠÜ‚Ş)‚ÌŒÂ”
-	ss->pos = pos;  //Œ»İ‚Ì‹Ç–Ê‚Ì•Û‘¶B
+	Move moves[MaxMove];  // åˆæ³•æ‰‹ã‚’æ ¼ç´ã™ã‚‹ãŸã‚ã®é…åˆ—
+	int n = generateMoves(moves, pos);  //ã™ã¹ã¦ã®åˆæ³•æ‰‹(ç‹æ‰‹æ”¾ç½®ã‚’å«ã‚€)ã®å€‹æ•°
+	ss->pos = pos;  //ç¾åœ¨ã®å±€é¢ã®ä¿å­˜ã€‚
 
 	for (int i = 0; i < n; i++){
 		Move move = moves[i];
-		if (!pos.isLegal(ss, move)) continue;  //‰¤è•ú’u‚ğœ‚­
+		if (!pos.isLegal(ss, move)) continue;  //ç‹æ‰‹æ”¾ç½®ã‚’é™¤ã
 
-		//è‚ği‚ß‚é
+		//æ‰‹ã‚’é€²ã‚ã‚‹
 		pos.doMove(ss, move);
-		// •à‚ğ‘Å‚Âè‚ÅA‘Šè‚É‰¤è‚ª‚©‚©‚é‚©B
+		// æ­©ã‚’æ‰“ã¤æ‰‹ã§ã€ç›¸æ‰‹ã«ç‹æ‰‹ãŒã‹ã‹ã‚‹ã‹ã€‚
 		if (move.from() == 0 && move.piece() == Pawn && pos.inCheck(pos.turn)){
-			//‘Å‚¿•à‹l‚ß‚Ìƒ`ƒFƒbƒNB
+			//æ‰“ã¡æ­©è©°ã‚ã®ãƒã‚§ãƒƒã‚¯ã€‚
 			checkSfen = cmd_str + " " + move.toUSI();
-			//‘Šè”Ô‚Å‚Ì‚·‚×‚Ä‚Ì‡–@è(‰¤è•ú’u‚ğŠÜ‚Ü‚È‚¢)‚ÌŒó•âè‚ª‚È‚¢=‘Å‚¿•à‹l‚ßB
+			//ç›¸æ‰‹ç•ªã§ã®ã™ã¹ã¦ã®åˆæ³•æ‰‹(ç‹æ‰‹æ”¾ç½®ã‚’å«ã¾ãªã„)ã®å€™è£œæ‰‹ãŒãªã„=æ‰“ã¡æ­©è©°ã‚ã€‚
 			if (legalMoves2(checkSfen) == 0) {
-				//è‚ğ–ß‚·
+				//æ‰‹ã‚’æˆ»ã™
 				pos = ss->pos;
-				continue;  //‘Å‚¿•à‹l‚ß‚ğœ‚­
+				continue;  //æ‰“ã¡æ­©è©°ã‚ã‚’é™¤ã
 			} 
 		}
-		//è‚ğ–ß‚·
+		//æ‰‹ã‚’æˆ»ã™
 		pos = ss->pos;
 		
-		// Œó•âå‚Æ‚µ‚Ä‹L˜^‚·‚éB
+		// å€™è£œä¸»ã¨ã—ã¦è¨˜éŒ²ã™ã‚‹ã€‚
 		rtn_str += moves[i].toUSI() + " ";
 	}
-	// CŒ¾Œê‚Åˆµ‚¦‚é‚æ‚¤‚É‚µ‚Ä‚¨‚­B
+	// Cè¨€èªã§æ‰±ãˆã‚‹ã‚ˆã†ã«ã—ã¦ãŠãã€‚
 	return strdup(rtn_str.c_str());
 }
 
